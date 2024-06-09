@@ -1,5 +1,8 @@
 # script-src-generator
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/JOT85/script-src-generator)](https://goreportcard.com/report/github.com/JOT85/script-src-generator)
+[![GoDoc](https://pkg.go.dev/badge/github.com/JOT85/script-src-generator)](https://pkg.go.dev/github.com/JOT85/script-src-generator/scriptsrc)
+
 script-src-generator provides the auto-generation of script-src policy directives of Content
 Security Policies (CSP) by parsing **trusted** HTML files.
 
@@ -48,7 +51,7 @@ This can be generated in a couple of ways.
 ## CLI Usage
 
 ```bash
-go install github.com/JOT85/script-src-generator
+go install github.com/JOT85/script-src-generator@latest
 script-src-generator /web/root/**.html
 > 'self' 'sha512-...' ... https://challenges.cloudflare.com
 ```

@@ -39,7 +39,7 @@
 //
 // # CLI Usage
 //
-//	go install github.com/JOT85/script-src-generator
+//	go install github.com/JOT85/script-src-generator@latest
 //	script-src-generator /web/root/**.html
 //	> 'self' 'sha512-...' ... https://challenges.cloudflare.com
 //
@@ -50,7 +50,7 @@
 //
 // See script-src-generator --help for more details, including templating support.
 //
-// If go/bin isn't in your path, the command will be ~/go/bin/script-src-generator instead.
+// If go/bin isn't in your path, the command will instead be ~/go/bin/script-src-generator.
 //
 // # Library Usage
 //
