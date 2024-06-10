@@ -74,6 +74,7 @@
 package scriptsrc
 
 import (
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -84,6 +85,13 @@ import (
 	"strings"
 
 	"golang.org/x/net/html"
+)
+
+type HashAlgorithm uint8
+
+const (
+	Sha512 HashAlgorithm = 0
+	Sha256 HashAlgorithm = 1
 )
 
 // ScriptSrc represents a script-src from a Content Security Policy (CSP)
@@ -99,6 +107,11 @@ type ScriptSrc struct {
 	//
 	// Surrounding quotes will be added when formatted.
 	Hashes []string
+
+	// DefaultHashAlgorithm specified which hashing algorithm is used for generating hashes of inline scripts.
+	//
+	// The zero value for this is [Sha512].
+	DefaultHashAlgorithm HashAlgorithm
 
 	// Hosts are the host sources, such as https://example.com
 	Hosts []string
@@ -127,11 +140,23 @@ func (scriptSrc *ScriptSrc) String() string {
 	return strings.Join(srcs, " ")
 }
 
-// AddInline adds the sha512 (though this may change) hash of some inline JavaScript to this scriptSrc.Hashes
+// AddInline adds the hash of some inline JavaScript to this scriptSrc.Hashes
+//
+// The hash type is specified by scriptSrc.DefaultHashAlgorithm
 func (scriptSrc *ScriptSrc) AddInline(content string) {
-	h := sha512.New()
-	h.Write([]byte(content))
-	hash := "sha512-" + base64.StdEncoding.EncodeToString(h.Sum(nil))
+	var hash string
+	switch scriptSrc.DefaultHashAlgorithm {
+	case Sha512:
+		h := sha512.New()
+		h.Write([]byte(content))
+		hash = "sha512-" + base64.StdEncoding.EncodeToString(h.Sum(nil))
+	case Sha256:
+		h := sha256.New()
+		h.Write([]byte(content))
+		hash = "sha256-" + base64.StdEncoding.EncodeToString(h.Sum(nil))
+	default:
+		panic(fmt.Errorf("invalid HashAlgorithm value from DefaultHashAlgorithm: %v", scriptSrc.DefaultHashAlgorithm))
+	}
 	if !slices.Contains(scriptSrc.Hashes, hash) {
 		scriptSrc.Hashes = append(scriptSrc.Hashes, hash)
 	}

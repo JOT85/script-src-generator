@@ -18,22 +18,30 @@ func main() {
 	verbose := true
 	cspTemplateFile := ""
 	cspTemplateString := ""
+	hashAlgorithm := scriptsrc.Sha512
+	hashAlgorithmSet := false
 
 	args := os.Args[1:]
 argParser:
 	for len(args) > 0 {
 		switch args[0] {
 		case "--help", "-h":
-			fmt.Println("Usage: " + os.Args[0] + " [--quiet] [--csp-template-file template-file | --csp-template-string template-string] <html file>...")
+			fmt.Println("Usage: " + os.Args[0] + " [--quiet] [--sha256 | --sha512] [--csp-template-file template-file | --csp-template-string template-string] <html file>...")
 			fmt.Println(`
   --quiet stops outputting the files being processed to stderr
 
-  --csp-template-file or --csp-template-string specifies an optional output template. This file will
-  be parsed as a text template (see https://pkg.go.dev/text/template) and executed to stdout.
+  --sha256 or --sha512 specifies the hashing algorithm to use for inline
+    scripts. This currently defaults sha512 but is subject to change.
+
+  --csp-template-file or --csp-template-string specifies an optional output
+    template. This file will be parsed as a text template (see
+    https://pkg.go.dev/text/template) and executed to stdout.
 
   The template is executed with the following fields available:
-  - {{ .ScriptSrc }} the value of the script-src CSP, for example "'self' 'sha512-....' https://example.com"
-    The struct formats as a string by default, but does have other fields, see https://pkg.go.dev/github.com/JOT85/script-src-generator/scriptsrc#ScriptSrc
+  - {{ .ScriptSrc }} the value of the script-src CSP, for example 
+    "'self' 'sha512-....'  https://example.com".
+    The struct formats as a string by default, but does have other fields, see
+    https://pkg.go.dev/github.com/JOT85/script-src-generator/scriptsrc#ScriptSrc
 
 For example:
 
@@ -45,6 +53,20 @@ Will generate a content security policy for the files in /web/root.`)
 
 		case "--quiet":
 			verbose = false
+
+		case "--sha512":
+			if hashAlgorithmSet && hashAlgorithm != scriptsrc.Sha512 {
+				exitWithError("You must specify only one hash algorithm")
+			}
+			hashAlgorithmSet = true
+			hashAlgorithm = scriptsrc.Sha512
+
+		case "--sha256":
+			if hashAlgorithmSet && hashAlgorithm != scriptsrc.Sha256 {
+				exitWithError("You must specify only one hash algorithm")
+			}
+			hashAlgorithmSet = true
+			hashAlgorithm = scriptsrc.Sha256
 
 		case "--csp-template-file":
 			args = args[1:]
@@ -69,7 +91,9 @@ Will generate a content security policy for the files in /web/root.`)
 		args = args[1:]
 	}
 
-	scriptSrc := scriptsrc.ScriptSrc{}
+	scriptSrc := scriptsrc.ScriptSrc{
+		DefaultHashAlgorithm: hashAlgorithm,
+	}
 	errored := false
 	for _, path := range args {
 		if verbose {
